@@ -1,0 +1,31 @@
+name: Minecraft AFK Bot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
+
+jobs:
+  afk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run AFK bot
+        env:
+          BOT_USERNAME: "Bot"
+          AUTH_TYPE: offline
+          MC_VERSION: '1.21'
+          RUN_MINUTES: '5'
+        run: node bot.js
+        
