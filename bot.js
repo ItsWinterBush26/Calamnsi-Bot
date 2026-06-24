@@ -19,6 +19,25 @@ const bot = mineflayer.createBot({
 
 let moveInterval = null
 
+function hasValidPosition () {
+  if (!bot.entity || !bot.entity.position) return false
+  const { x, y, z } = bot.entity.position
+  return Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z)
+}
+
+function waitForValidPosition (callback, maxWaitMs = 15000) {
+  const start = Date.now()
+  const check = setInterval(() => {
+    if (hasValidPosition()) {
+      clearInterval(check)
+      callback()
+    } else if (Date.now() - start > maxWaitMs) {
+      clearInterval(check)
+      console.log('Timed out waiting for a valid position, skipping movement setup')
+    }
+  }, 250)
+}
+
 bot.once('spawn', () => {
   console.log(`Spawned as ${bot.username} on ${HOST}:${PORT}`)
 
@@ -30,14 +49,19 @@ bot.once('spawn', () => {
     bot.chat('/login password')
   }, 4000)
 
-  moveInterval = setInterval(() => {
-    if (!bot.entity) return
-    bot.setControlState('jump', true)
-    setTimeout(() => bot.setControlState('jump', false), 300)
+  waitForValidPosition(() => {
+    moveInterval = setInterval(() => {
+      if (!hasValidPosition()) return
 
-    const yaw = Math.random() * Math.PI * 2
-    bot.look(yaw, 0, true)
-  }, 20000)
+      bot.setControlState('jump', true)
+      setTimeout(() => {
+        if (hasValidPosition()) bot.setControlState('jump', false)
+      }, 300)
+
+      const yaw = Math.random() * Math.PI * 2
+      bot.look(yaw, 0, true)
+    }, 20000)
+  }, 15000)
 
   setTimeout(() => {
     console.log(`Run time of ${RUN_MINUTES} minute(s) reached, disconnecting cleanly`)
