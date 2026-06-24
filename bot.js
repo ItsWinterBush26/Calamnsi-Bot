@@ -1,17 +1,12 @@
 const mineflayer = require('mineflayer')
 
-const HOST = process.env.SERVER_HOST
+const HOST = process.env.SERVER_HOST || 'calamansi.playwithbao.com'
 const PORT = parseInt(process.env.SERVER_PORT || '25565', 10)
 const USERNAME = process.env.BOT_USERNAME || 'AfkBot'
 const VERSION = process.env.MC_VERSION || false
 const AUTH = process.env.AUTH_TYPE || 'offline'
 const RUN_MINUTES = parseInt(process.env.RUN_MINUTES || '5', 10)
 const PASSWORD = process.env.BOT_PASSWORD || undefined
-
-if (!HOST) {
-  console.error('SERVER_HOST is not set')
-  process.exit(1)
-}
 
 const bot = mineflayer.createBot({
   host: HOST,
@@ -26,6 +21,14 @@ let moveInterval = null
 
 bot.once('spawn', () => {
   console.log(`Spawned as ${bot.username} on ${HOST}:${PORT}`)
+
+  setTimeout(() => {
+    bot.chat('/register password password')
+  }, 2000)
+
+  setTimeout(() => {
+    bot.chat('/login password')
+  }, 4000)
 
   moveInterval = setInterval(() => {
     if (!bot.entity) return
