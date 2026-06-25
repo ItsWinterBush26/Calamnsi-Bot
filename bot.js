@@ -1,88 +1,60 @@
-const mineflayer = require('mineflayer')
+const mineflayer = require('mineflayer');
+const mc = require('minecraft-protocol');
 
-const HOST = process.env.SERVER_HOST || 'calamansi.playwithbao.com'
-const PORT = parseInt(process.env.SERVER_PORT || '25565', 10)
-const USERNAME = process.env.BOT_USERNAME || 'AfkBot'
-const VERSION = process.env.MC_VERSION || false
-const AUTH = process.env.AUTH_TYPE || 'offline'
-const RUN_MINUTES = parseInt(process.env.RUN_MINUTES || '5', 10)
-const PASSWORD = process.env.BOT_PASSWORD || undefined
+const MC_HOST = process.env.MC_HOST || 'localhost';
+const MC_PORT = parseInt(process.env.MC_PORT || '25565');
+const MC_USERNAME = process.env.MC_USERNAME || 'GitHubBot';
+const MC_VERSION = process.env.MC_VERSION || '1.20.1'; // Match your server version
 
-const bot = mineflayer.createBot({
-  host: HOST,
-  port: PORT,
-  username: USERNAME,
-  password: PASSWORD,
-  auth: AUTH,
-  version: VERSION
-})
+async function checkAndJoin() {
+  console.log(`Pinging ${MC_HOST}:${MC_PORT}...`);
+  
+  try {
+    const options = { host: MC_HOST, port: MC_PORT, version: MC_VERSION };
+    const result = await mc.ping(options);
+    
+    const playersOnline = result.players?.online ?? 0;
+    console.log(`Players online: ${playersOnline}`);
 
-let moveInterval = null
+    if (playersOnline === 0) {
+      console.log('Server is empty. Joining server...');
+      
+      const bot = mineflayer.createBot({
+        host: MC_HOST,
+        port: MC_PORT,
+        username: MC_USERNAME,
+        version: MC_VERSION,
+        auth: 'offline' // Change to 'microsoft' if your server requires premium accounts
+      });
 
-function hasValidPosition () {
-  if (!bot.entity || !bot.entity.position) return false
-  const { x, y, z } = bot.entity.position
-  return Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z)
-}
+      bot.once('spawn', () => {
+        console.log('Successfully spawned in! Keeping server alive...');
+        // Wait 10 seconds before leaving
+        setTimeout(() => {
+          console.log('Disconnecting.');
+          bot.quit();
+          process.exit(0);
+        }, 10000);
+      });
 
-function waitForValidPosition (callback, maxWaitMs = 15000) {
-  const start = Date.now()
-  const check = setInterval(() => {
-    if (hasValidPosition()) {
-      clearInterval(check)
-      callback()
-    } else if (Date.now() - start > maxWaitMs) {
-      clearInterval(check)
-      console.log('Timed out waiting for a valid position, skipping movement setup')
+      bot.on('error', (err) => {
+        console.error('Bot encountered an error:', err);
+        process.exit(1);
+      });
+
+      bot.on('kicked', (reason) => {
+        console.log('Bot was kicked:', reason);
+        process.exit(0);
+      });
+
+    } else {
+      console.log('Players are already online. No action needed.');
+      process.exit(0);
     }
-  }, 250)
+  } catch (error) {
+    console.error('Failed to ping or connect to the server:', error);
+    process.exit(1);
+  }
 }
 
-bot.once('spawn', () => {
-  console.log(`Spawned as ${bot.username} on ${HOST}:${PORT}`)
-
-  setTimeout(() => {
-    bot.chat('/register password password')
-  }, 2000)
-
-  setTimeout(() => {
-    bot.chat('/login password')
-  }, 4000)
-
-  waitForValidPosition(() => {
-    moveInterval = setInterval(() => {
-      if (!hasValidPosition()) return
-
-      bot.setControlState('jump', true)
-      setTimeout(() => {
-        if (hasValidPosition()) bot.setControlState('jump', false)
-      }, 300)
-
-      const yaw = Math.random() * Math.PI * 2
-      bot.look(yaw, 0, true)
-    }, 20000)
-  }, 15000)
-
-  setTimeout(() => {
-    console.log(`Run time of ${RUN_MINUTES} minute(s) reached, disconnecting cleanly`)
-    bot.quit()
-  }, RUN_MINUTES * 60 * 1000)
-})
-
-bot.on('chat', (username, message) => {
-  console.log(`<${username}> ${message}`)
-})
-
-bot.on('kicked', (reason) => {
-  console.log('Kicked:', reason)
-})
-
-bot.on('error', (err) => {
-  console.log('Error:', err.message)
-})
-
-bot.on('end', () => {
-  if (moveInterval) clearInterval(moveInterval)
-  console.log('Disconnected, exiting process')
-  process.exit(0)
-})
+checkAndJoin();
