@@ -1,12 +1,10 @@
+
 {
-  "name": "afk-bot",
+  "name": "mineflayer-keepalive",
   "version": "1.0.0",
-  "private": true,
-  "main": "bot.js",
-  "scripts": {
-    "start": "node bot.js"
-  },
+  "main": "index.js",
   "dependencies": {
-    "mineflayer": "^4.20.0"
+    "mineflayer": "^4.22.0",
+    "minecraft-protocol": "^1.47.0"
   }
 }
