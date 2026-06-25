@@ -27,7 +27,7 @@ jobs:
         MC_HOST: 'calamansi.playwithbao.com'
         MC_PORT: '25565'
         MC_USERNAME: 'Bot'
-      run: node index.js
+      run: node bot.js
 
     # --- THE LOOP MECHANISM ---
     # This step waits for 30 minutes BEFORE triggering the next workflow run.
