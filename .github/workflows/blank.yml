@@ -1,10 +1,9 @@
-name: Minecraft Server Keep-Alive
+name: Minecraft Server Keep-Alive Loop
 
 on:
-  schedule:
-    # Runs every 30 minutes
-    - cron: '*/30 * * * *'
-  workflow_dispatch: # Allows you to run it manually from the GitHub Actions tab
+  workflow_dispatch: # Allows manual starting of the loop
+  repository_dispatch:
+    types: [trigger-next-run]
 
 jobs:
   run-bot:
@@ -17,7 +16,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-node-version: '20'
+        node-version: '20'
         cache: 'npm'
 
     - name: Install dependencies
@@ -25,8 +24,20 @@ jobs:
 
     - name: Run Keep-Alive Script
       env:
-        MC_HOST: ${{ secrets.MC_HOST }}
-        MC_PORT: ${{ secrets.MC_PORT }}
-        MC_USERNAME: ${{ secrets.MC_USERNAME }}
+        MC_HOST: 'calamansi.playwithbao.com'
+        MC_PORT: '25565'
+        MC_USERNAME: 'Bot'
       run: node index.js
-      
+
+    # --- THE LOOP MECHANISM ---
+    # This step waits for 30 minutes BEFORE triggering the next workflow run.
+    # Note: This will consume 30 minutes of GitHub Actions execution time.
+    - name: Wait for 30 minutes
+      run: sleep 1800
+
+    - name: Trigger next run
+      uses: peter-evans/repository-dispatch@v3
+      with:
+        token: ${{ secrets.LOOP_ACCESS_TOKEN }}
+        event-type: trigger-next-run
+        
