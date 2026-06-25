@@ -1,30 +1,32 @@
-name: Minecraft AFK Bot
+name: Minecraft Server Keep-Alive
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '20/20 * * * *'
+    # Runs every 30 minutes
+    - cron: '*/30 * * * *'
+  workflow_dispatch: # Allows you to run it manually from the GitHub Actions tab
+
 jobs:
-  afk:
+  run-bot:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-node-version: '20'
+        cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+    - name: Install dependencies
+      run: npm install
 
-      - name: Run AFK bot
-        env:
-          BOT_USERNAME: "Bot"
-          AUTH_TYPE: offline
-          MC_VERSION: '1.21'
-          RUN_MINUTES: '5'
-        run: node bot.js
-        
+    - name: Run Keep-Alive Script
+      env:
+        MC_HOST: ${{ secrets.MC_HOST }}
+        MC_PORT: ${{ secrets.MC_PORT }}
+        MC_USERNAME: ${{ secrets.MC_USERNAME }}
+      run: node index.js
+      
