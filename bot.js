@@ -1,7 +1,7 @@
 const mineflayer = require('mineflayer');
 const mc = require('minecraft-protocol');
 
-const MC_HOST = process.env.MC_HOST || 'localhost';
+const MC_HOST = process.env.MC_HOST || 'calamansi.playwithbao.com';
 const MC_PORT = parseInt(process.env.MC_PORT || '25565');
 const MC_USERNAME = process.env.MC_USERNAME || 'GitHubBot';
 const MC_VERSION = process.env.MC_VERSION || '1.20.1'; // Match your server version
